@@ -324,9 +324,8 @@ Model Interpretation
    ↓
 New Patient Prediction
 ```
-
-## Conclusion
 ---
+## Conclusion
 
 This project provided an opportunity to work with a real-world healthcare dataset and apply a complete data analysis and machine-learning workflow.
 
@@ -338,5 +337,4 @@ The model was also interpreted using odds ratios to understand how different fea
 
 Finally, the trained model can be used to estimate the probability of a no-show for a new patient based on their demographic, health, and appointment-related information.
 
----
 
