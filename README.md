@@ -327,10 +327,16 @@ New Patient Prediction
 
 ## Conclusion
 
+```text
+
 This project provided an opportunity to work with a real-world healthcare dataset and apply a complete data analysis and machine-learning workflow.
+
 The analysis involved understanding the dataset, cleaning the data, creating useful features, visualizing appointment attendance, and investigating relationships between patient characteristics and missed appointments.
+
 A Logistic Regression classification model was developed to predict whether a patient is likely to miss an appointment. The model was evaluated using a classification report, confusion matrix, ROC AUC, ROC curve, and five-fold cross-validation.
+
 The model was also interpreted using odds ratios to understand how different features are associated with the odds of a patient being classified as a no-show.
+
 Finally, the trained model can be used to estimate the probability of a no-show for a new patient based on their demographic, health, and appointment-related information.
 
 
