@@ -276,9 +276,9 @@ The model then produces a probability of no-show.
 
 For example:
 
-```text
 Probability of no-show: 0.67
 
+---
 
 ## Technologies Used
 
@@ -323,8 +323,7 @@ Cross-Validation
 Model Interpretation
    ↓
 New Patient Prediction
-
----
+```
 
 ## Conclusion
 
@@ -333,3 +332,5 @@ The analysis involved understanding the dataset, cleaning the data, creating use
 A Logistic Regression classification model was developed to predict whether a patient is likely to miss an appointment. The model was evaluated using a classification report, confusion matrix, ROC AUC, ROC curve, and five-fold cross-validation.
 The model was also interpreted using odds ratios to understand how different features are associated with the odds of a patient being classified as a no-show.
 Finally, the trained model can be used to estimate the probability of a no-show for a new patient based on their demographic, health, and appointment-related information.
+
+
