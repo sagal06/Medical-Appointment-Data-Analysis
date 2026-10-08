@@ -6,7 +6,7 @@ This project analyzes a medical appointment dataset to understand the factors as
 
 The dataset contains information about patients such as age, gender, health conditions, scholarship status, SMS reminders, appointment dates, scheduling dates, and neighbourhood.
 
-The main purpose of this project is to clean the data, explore different patterns through visualizations, and identify factors that may be related to appointment attendance.
+The main purpose of this project is to clean the data, explore different patterns through visualizations, and build a classification model to predict whether a patient is likely to miss an appointment.
 
 ---
 
@@ -18,10 +18,11 @@ The main objectives of this project are:
 * Clean and prepare the data for analysis.
 * Analyze the overall appointment attendance rate.
 * Explore the relationship between patient characteristics and attendance.
-* Analyze the effect of SMS reminders on appointment attendance.
+* Analyze the relationship between SMS reminders and appointment attendance.
 * Study the relationship between waiting time and missed appointments.
 * Compare appointment attendance across different groups and neighbourhoods.
-* Prepare the dataset for a future classification model.
+* Build a classification model to predict appointment no-shows.
+* Evaluate and interpret the performance of the classification model.
 
 ---
 
@@ -31,23 +32,28 @@ The dataset contains information about medical appointments and whether patients
 
 Some important attributes include:
 
-| Column         | Description                                      |
-| -------------- | ------------------------------------------------ |
-| Gender         | Gender of the patient                            |
-| Age            | Age of the patient                               |
-| Hypertension   | Whether the patient has hypertension             |
-| Diabetes       | Whether the patient has diabetes                 |
-| Scholarship    | Whether the patient received a scholarship       |
-| SMS_received   | Whether the patient received an SMS reminder     |
-| ScheduledDay   | Date and time when the appointment was scheduled |
-| AppointmentDay | Date of the actual appointment                   |
-| Neighbourhood  | Location of the appointment                      |
-| No-show        | Original appointment attendance status           |
+| Column | Description |
+|---|---|
+| Gender | Gender of the patient |
+| Age | Age of the patient |
+| Hypertension | Whether the patient has hypertension |
+| Diabetes | Whether the patient has diabetes |
+| Scholarship | Whether the patient received a scholarship |
+| SMS_received | Whether the patient received an SMS reminder |
+| ScheduledDay | Date and time when the appointment was scheduled |
+| AppointmentDay | Date of the actual appointment |
+| Neighbourhood | Location of the appointment |
+| No-show | Original appointment attendance status |
 
 A new `show` variable was created during preprocessing to make the target easier to work with:
 
 * `1` → Patient attended the appointment
 * `0` → Patient did not attend the appointment
+
+For the classification model, this was converted into a `no_show` target:
+
+* `1` → Patient missed the appointment
+* `0` → Patient attended the appointment
 
 ---
 
@@ -64,6 +70,7 @@ The following preprocessing steps were performed:
 * Converted appointment and scheduling columns to datetime format.
 * Calculated the number of days between scheduling and appointment dates.
 * Created a binary `show` variable for appointment attendance.
+* Removed invalid records with negative age or negative waiting time before modelling.
 
 For calculating the waiting period, the date portions were compared rather than the time components so that same-day appointments were not incorrectly assigned a negative value.
 
@@ -79,27 +86,33 @@ The overall proportion of patients who attended and missed their appointments wa
 
 ### Gender
 
-The percentage of females missing their appointment is nearly two times the number of males. So females are more likely to miss their appointment.
+Appointment attendance was compared between male and female patients.
+
+The analysis uses proportions rather than only raw counts so that differences in the number of male and female patients do not give a misleading impression.
 
 ### Scholarship
 
-It seems that patients with scholarships are actually more likely to miss their appointment
+The attendance rate was compared between patients with and without a scholarship.
 
 ### Hypertension
 
-It seems that patients with hypertension are actually more likely to show up for their appointment.
+The appointment attendance of patients with and without hypertension was explored.
 
 ### SMS Reminders
 
-A strange finding here suggests that patients who received an SMS are more likely to miss their appointment.
+The relationship between receiving an SMS reminder and appointment attendance was analyzed.
+
+A difference between the two groups does not necessarily mean that SMS reminders cause patients to attend or miss appointments. Other factors may influence whether a reminder is sent.
 
 ### Waiting Time
 
-It appears that the longer the period between the scheduling and appointment the more likely the patient won't show up.
+The difference between the scheduled date and appointment date was calculated as `day_diff`.
+
+The analysis examines whether longer waiting periods are associated with a higher proportion of missed appointments.
 
 ### Age
 
-There is no clear relation between the age and whether the patient shows up or not but younger patients are more likely to miss their appointments.
+Age distributions were compared to look for patterns between patients who attended and those who missed their appointments.
 
 ### Neighbourhood
 
@@ -117,6 +130,156 @@ However, these observations represent associations in the dataset. They should n
 
 ---
 
+## Classification Model
+
+A **Logistic Regression** model was developed to predict whether a patient is likely to miss a medical appointment.
+
+The model uses patient information and appointment-related features to classify each record into two classes:
+
+* `0` → Show
+* `1` → No-show
+
+### Features Used
+
+The model uses the following features:
+
+**Numerical features:**
+
+* Age
+* Waiting time (`day_diff`)
+
+**Binary features:**
+
+* Scholarship
+* Hypertension
+* Diabetes
+* Alcoholism
+* Handicap
+* SMS received
+
+**Categorical features:**
+
+* Gender
+* Neighbourhood
+
+The original attendance variable was converted to `no_show` so that the model specifically focuses on identifying patients who may miss their appointments.
+
+---
+
+## Model Preparation
+
+Before training the model:
+
+* Invalid records with negative age or waiting time were removed.
+* The dataset was divided into training and testing sets.
+* 80% of the data was used for training.
+* 20% of the data was used for testing.
+* Stratified splitting was used to maintain the proportion of show and no-show cases.
+* Numerical features were standardized using `StandardScaler`.
+* Categorical features were converted into numerical form using `OneHotEncoder`.
+* Binary features were passed through without additional encoding.
+
+A machine-learning pipeline was used to combine preprocessing and Logistic Regression into one workflow.
+
+Because no-show cases represent a smaller class in the dataset, `class_weight='balanced'` was used to give additional importance to the no-show class.
+
+---
+
+## Model Evaluation
+
+The trained Logistic Regression model was evaluated on the test dataset.
+
+The following evaluation methods were used:
+
+### Classification Report
+
+The classification report provides:
+
+* Precision
+* Recall
+* F1-score
+* Support
+
+These metrics help evaluate how well the model identifies both patients who attend and patients who miss their appointments.
+
+### Confusion Matrix
+
+The confusion matrix shows the number of:
+
+* Correctly predicted show cases
+* Incorrectly predicted no-show cases
+* Incorrectly predicted show cases
+* Correctly predicted no-show cases
+
+This helps understand where the model makes correct and incorrect predictions.
+
+### ROC AUC
+
+ROC AUC was used to measure how well the model distinguishes between patients who attend and patients who miss their appointments.
+
+A higher ROC AUC indicates better separation between the two classes.
+
+### ROC Curve
+
+A ROC curve was also generated to visualize the classification performance of the model across different probability thresholds.
+
+---
+
+## Cross-Validation
+
+Five-fold stratified cross-validation was performed to check whether the model's performance remains reasonably consistent across different subsets of the dataset.
+
+`StratifiedKFold` was used so that each fold maintains a similar distribution of show and no-show cases.
+
+ROC AUC was calculated for each fold, followed by the mean ROC AUC.
+
+This provides an additional check on the stability of the model rather than relying only on one train-test split.
+
+---
+
+## Model Interpretation
+
+The Logistic Regression coefficients were converted into **odds ratios** to make the model easier to interpret.
+
+The odds ratio helps show how each feature is associated with the odds of a patient being classified as a no-show.
+
+* Odds ratio greater than `1` → higher odds of no-show.
+* Odds ratio less than `1` → lower odds of no-show.
+* Odds ratio close to `1` → smaller change in the odds.
+
+A bar chart was created to visualize the odds ratios for the main features.
+
+These values represent associations learned by the model and should not be interpreted as proof of direct causation.
+
+---
+
+## Prediction for a New Patient
+
+The trained model can also be used to estimate the probability that a new patient will miss an appointment.
+
+For example, information such as:
+
+* Age
+* Waiting time
+* Scholarship status
+* Hypertension
+* Diabetes
+* Alcoholism
+* Handicap
+* SMS received
+* Gender
+* Neighbourhood
+
+can be provided as input.
+
+The model then produces a probability of no-show.
+
+For example:
+
+```text
+Probability of no-show: 0.67
+
+
 ## Technologies Used
 
 * Python
@@ -124,9 +287,11 @@ However, these observations represent associations in the dataset. They should n
 * NumPy
 * Matplotlib
 * Seaborn
+* Scikit-learn
 * Jupyter Notebook
 
 ---
+
 
 ## Project Workflow
 
@@ -147,61 +312,24 @@ Visualization
    ↓
 Key Observations
    ↓
-Classification Model
+Prepare Data for Modelling
    ↓
-Appointment Prediction
-```
-
----
-
-## Future Scope
-
-The next stage of this project is to build a classification model using the cleaned dataset.
-
-A Logistic Regression model can be used to predict whether a patient is likely to attend or miss an appointment based on features such as:
-
-* Gender
-* Age
-* Hypertension
-* Diabetes
-* Scholarship
-* SMS received
-* Waiting days
-
-The model can then be evaluated using:
-
-* Accuracy
-* Precision
-* Recall
-* F1-score
-* Confusion Matrix
-
-An interactive input section can also be added so that a user can enter patient information and receive a predicted appointment outcome.
-
----
-
-## Project Structure
-
-```text
-Medical-Appointment-Data-Analysis/
-│
-├── data/
-│   └── noshowappointment.csv
-│
-├── notebooks/
-│   └── Medical_Appointment_Data_Analysis.ipynb
-│
-├── README.md
-├── requirements.txt
-└── .gitignore
-```
+Logistic Regression Model
+   ↓
+Model Evaluation
+   ↓
+Cross-Validation
+   ↓
+Model Interpretation
+   ↓
+New Patient Prediction
 
 ---
 
 ## Conclusion
 
-This project provided an opportunity to work with a real-world healthcare dataset and apply the complete exploratory data analysis workflow.
-
+This project provided an opportunity to work with a real-world healthcare dataset and apply a complete data analysis and machine-learning workflow.
 The analysis involved understanding the dataset, cleaning the data, creating useful features, visualizing appointment attendance, and investigating relationships between patient characteristics and missed appointments.
-
-The cleaned dataset can now be used for the next phase of the project: developing a classification model to predict appointment attendance.
+A Logistic Regression classification model was developed to predict whether a patient is likely to miss an appointment. The model was evaluated using a classification report, confusion matrix, ROC AUC, ROC curve, and five-fold cross-validation.
+The model was also interpreted using odds ratios to understand how different features are associated with the odds of a patient being classified as a no-show.
+Finally, the trained model can be used to estimate the probability of a no-show for a new patient based on their demographic, health, and appointment-related information.
